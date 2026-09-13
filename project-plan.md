@@ -91,7 +91,18 @@ CREATE TABLE card_labels (
 - `card_labels` tabel pivot many-to-many (1 card bisa multi label)
 - Search/filter tidak butuh tabel baru — cukup query `WHERE title LIKE ?` dan join ke `card_labels`/`due_date`
 
-## 5. Folder Structure
+## 5. Arsitektur: Full API + Frontend Terpisah
+
+Diputuskan (setelah Sprint 1 dimulai) untuk memisahkan backend dan frontend sepenuhnya, bukan menggabung PHP+HTML dalam satu file:
+
+- **`public/`** — HANYA HTML/CSS/JS statis. Tidak ada logic PHP sama sekali di sini.
+- **`api/`** — HANYA PHP yang menerima request dan mengembalikan **JSON**. Tidak pernah merender HTML.
+- Komunikasi antara keduanya lewat `fetch()` di JavaScript (AJAX), bukan form submit biasa.
+- CSRF token diambil frontend lewat endpoint `api/csrf.php` sebelum submit apa pun, disimpan di variabel JS, dikirim di body request.
+- Validasi dilakukan di 2 tempat: JS (feedback cepat ke user) DAN PHP (validasi sesungguhnya, karena JS bisa dimatikan/dimanipulasi).
+- Session login (`$_SESSION`) tetap dipakai seperti biasa — cookie session otomatis terkirim tiap `fetch()` ke domain yang sama.
+
+## 6. Folder Structure
 
 ```
 /trello-clone
@@ -99,21 +110,25 @@ CREATE TABLE card_labels (
     db.php                 // koneksi PDO
   /includes
     auth.php               // session guard, redirect kalau belum login
-    functions.php          // helper: sanitize, csrf token, dll
-  /public
+    functions.php          // helper: escape, csrf token, dll
+  /public                   // FULL statis, tidak ada PHP
     /css
       style.css
     /js
+      register.js
+      login.js
       board.js              // load & render board/list/card
-      card-actions.js        // create/edit/delete/move card
+      card-actions.js       // create/edit/delete/move card
       search-filter.js
-    index.php
-    login.php
+    index.html
+    login.html
+    register.html
+    board.html
+  /api                       // FULL backend, selalu balikin JSON
+    csrf.php                 // kasih token CSRF ke frontend
     register.php
+    login.php
     logout.php
-    board.php               // daftar board user
-    board_detail.php        // isi 1 board (list + card)
-  /api
     create_board.php
     create_list.php
     create_card.php
@@ -126,7 +141,7 @@ CREATE TABLE card_labels (
   README.md
 ```
 
-## 6. Sprint Plan
+## 7. Sprint Plan
 
 | Sprint | Fokus | Definition of Done |
 |---|---|---|
@@ -141,7 +156,7 @@ CREATE TABLE card_labels (
 | 8 | Upgrade ke Drag & Drop (HTML5 API) | Drag card/list antar posisi, backend logic reuse dari Sprint 5 |
 | 9 | Testing, hardening security, dokumentasi | Checklist keamanan lolos, README lengkap |
 
-## 7. Security Checklist (dicek ulang di Sprint 9)
+## 8. Security Checklist (dicek ulang di Sprint 9)
 - [ ] Semua query pakai prepared statement
 - [ ] Password di-hash
 - [ ] CSRF token di semua form POST

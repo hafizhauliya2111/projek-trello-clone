@@ -1,0 +1,58 @@
+-- Trello-Style Task Manager — Database Schema
+-- Import file ini ke MySQL sebelum menjalankan aplikasi.
+
+CREATE DATABASE IF NOT EXISTS trello_clone CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE trello_clone;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE boards (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE lists (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  board_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  position INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
+);
+
+CREATE TABLE cards (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  list_id INT NOT NULL,
+  title VARCHAR(150) NOT NULL,
+  description TEXT,
+  due_date DATE NULL,
+  position INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
+);
+
+CREATE TABLE labels (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  board_id INT NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  color VARCHAR(7) NOT NULL,
+  FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
+);
+
+CREATE TABLE card_labels (
+  card_id INT NOT NULL,
+  label_id INT NOT NULL,
+  PRIMARY KEY (card_id, label_id),
+  FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE,
+  FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE
+);
